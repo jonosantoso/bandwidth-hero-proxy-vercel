@@ -52,13 +52,13 @@ function compress(req, res, input) {
             var compressionQuality = req.params.quality;
             
             if(pixelCount > 3000000 || metadata.size > 1536000){
-                compressionQuality *= 0.1
+                compressionQuality *= 0.5 // original 0.1
             }else if(pixelCount > 2000000 && metadata.size > 1024000){
-                compressionQuality *= 0.25
+                compressionQuality *= 0.5 // original 0.25
             }else if(pixelCount > 1000000 && metadata.size > 512000){
                 compressionQuality *= 0.5
             }else if(pixelCount > 500000 && metadata.size > 256000){
-                compressionQuality *= 0.75
+                compressionQuality *= 0.5 // original 0.75
             }
             compressionQuality = Math.ceil(compressionQuality)
             
@@ -66,6 +66,7 @@ function compress(req, res, input) {
             .grayscale(req.params.grayscale)
             .toFormat(format, {
                 quality: compressionQuality,
+                effort: 2,
                 progressive: true,
                 optimizeScans: true
             })
