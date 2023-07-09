@@ -48,9 +48,20 @@ function compress(req, res, input) {
     
     image
         .metadata(function(err, metadata){
-            let pixelCount = metadata.width * metadata.height;
-            var compressionQuality = req.params.quality;
-            
+          //let pixelCount = metadata.width * metadata.height;
+            let formatImg = req.params.webp ? 'webp' : 'jpeg'
+            let imgWidth = metadata.width
+            let imgHeight = metadata.height
+            let compressionQuality = req.params.quality
+          //lazy hack
+            if(imgWidth >= 16383 || imgHeight >= 16383){
+              formatImg = 'jpeg';
+              compressionQuality *= 2.75;
+            }else{
+              formatImg = 'webp';
+              compressionQuality *= 0.5;
+            }
+          /*
             if(pixelCount > 3000000 || metadata.size > 1536000){
                 compressionQuality *= 0.5 // original 0.1
             }else if(pixelCount > 2000000 && metadata.size > 1024000){
@@ -60,20 +71,21 @@ function compress(req, res, input) {
             }else if(pixelCount > 500000 && metadata.size > 256000){
                 compressionQuality *= 0.5 // original 0.75
             }
+          */
             compressionQuality = Math.ceil(compressionQuality)
             
             sharp(input)
             .grayscale(req.params.grayscale)
-            .toFormat(format, {
+            .toFormat(formatImg, {
                 quality: compressionQuality,
-                effort: 2,
+                effort: 6,
                 progressive: true,
-                optimizeScans: true
+                mozjpeg: true
             })
             .toBuffer((err, output, info) => {
                 if (err || !info || res.headersSent) return redirect(req, res)
 
-                setResponseHeaders(info, format)
+                setResponseHeaders(info, formatImg)
                 res.write(output)
                 res.end()
             })
